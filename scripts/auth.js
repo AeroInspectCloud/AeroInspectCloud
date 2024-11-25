@@ -25,18 +25,18 @@ const extractTokenFromUrl = () => {
     if (!accessToken) {
         showPopup("Fehler", "Authentifizierung fehlgeschlagen. Weiterleitung zur Anmeldung...");
         authenticate(); // Auth erneut starten
+    } else {
+        console.log("Access Token erfolgreich extrahiert:", accessToken);
     }
 };
 
 // Funktion zum Anzeigen des Popups
 const showPopup = (title, message) => {
-    // Überprüfen, ob ein Popup bereits existiert und es entfernen
     const existingPopup = document.getElementById("popup");
     if (existingPopup) {
         existingPopup.remove();
     }
 
-    // Popup erstellen
     const popup = document.createElement("div");
     popup.id = "popup";
     popup.style.position = "fixed";
@@ -59,7 +59,6 @@ const showPopup = (title, message) => {
 
     document.body.appendChild(popup);
 
-    // Event zum Schließen des Popups
     const closeButton = document.getElementById("close-popup");
     closeButton.addEventListener("click", () => {
         document.body.removeChild(popup);
@@ -69,7 +68,7 @@ const showPopup = (title, message) => {
 // Benutzer authentifizieren
 const authenticateUser = async (username, password) => {
     const userListEndpoint = "https://aeroinspect.sharepoint.com/_api/web/lists/getbytitle('Benutzerverwaltung')/items";
-    
+
     try {
         const response = await fetch(userListEndpoint, {
             method: "GET",
@@ -79,11 +78,20 @@ const authenticateUser = async (username, password) => {
             },
         });
 
+        console.log("HTTP-Statuscode:", response.status); // Statuscode der Anfrage
+
+        if (response.status === 401) {
+            showPopup("Fehler", "Nicht autorisiert. Überprüfen Sie Ihre Berechtigungen.");
+            return null;
+        }
+
         if (!response.ok) {
-            throw new Error("Fehler beim Abrufen der Benutzerliste");
+            throw new Error(`Fehler beim Abrufen der Benutzerliste (Statuscode: ${response.status})`);
         }
 
         const data = await response.json();
+        console.log("Erhaltene Daten:", data); // Debug-Ausgabe der Daten
+
         const user = data.d.results.find(
             item => item.Title === username && item.Passwort === password
         );
@@ -97,7 +105,7 @@ const authenticateUser = async (username, password) => {
         return user;
     } catch (error) {
         console.error("Fehler bei der Authentifizierung:", error.message);
-        showPopup("Fehler", "Fehler beim Login. Bitte versuche es erneut.");
+        showPopup("Fehler", `Fehler beim Login. Details: ${error.message}`);
         return null;
     }
 };
@@ -119,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showPopup("Erfolg", "Anmeldung erfolgreich!");
                 setTimeout(() => {
                     window.location.href = "customers.html"; // Weiterleitung zur Hauptseite
-                }, 2000); // Leichte Verzögerung, damit Popup sichtbar bleibt
+                }, 2000);
             }
         });
     }
