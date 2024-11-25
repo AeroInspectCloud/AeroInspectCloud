@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin-Bereich</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Admin-Bereich</h1>
+        <button id="logout">Abmelden</button>
+
+        <h2>Benutzer verwalten</h2>
+        <form id="create-user-form">
+            <label for="new-username">Benutzername:</label>
+            <input type="text" id="new-username" required>
+
+            <label for="new-password">Passwort:</label>
+            <input type="password" id="new-password" required>
+
+            <button type="submit">Benutzer erstellen</button>
+        </form>
+
+        <h2>Benutzerseiten aufrufen</h2>
+        <select id="user-dropdown">
+            <option value="">-- Wähle einen Benutzer --</option>
+        </select>
+        <button id="view-customers">Kundenlisten anzeigen</button>
+        <button id="view-routes">Routenlisten anzeigen</button>
+        <button id="view-optimization">Routenoptimierung anzeigen</button>
+    </div>
+    <script src="scripts/admin.js"></script>
+</body>
+</html>
