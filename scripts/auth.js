@@ -23,9 +23,37 @@ const extractTokenFromUrl = () => {
     accessToken = params.get("access_token");
 
     if (!accessToken) {
-        alert("Authentifizierung fehlgeschlagen. Weiterleitung zur Anmeldung...");
+        showPopup("Fehler", "Authentifizierung fehlgeschlagen. Weiterleitung zur Anmeldung...");
         authenticate(); // Auth erneut starten
     }
+};
+
+// Funktion zum Anzeigen des Popups
+const showPopup = (title, message) => {
+    const popup = document.createElement("div");
+    popup.style.position = "fixed";
+    popup.style.top = "50%";
+    popup.style.left = "50%";
+    popup.style.transform = "translate(-50%, -50%)";
+    popup.style.backgroundColor = "white";
+    popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+    popup.style.borderRadius = "8px";
+    popup.style.padding = "20px";
+    popup.style.zIndex = "1000";
+    popup.style.textAlign = "center";
+
+    popup.innerHTML = `
+        <h2>${title}</h2>
+        <p>${message}</p>
+        <button id="close-popup" style="padding: 10px 20px; margin-top: 20px; cursor: pointer;">OK</button>
+    `;
+
+    document.body.appendChild(popup);
+
+    const closeButton = document.getElementById("close-popup");
+    closeButton.addEventListener("click", () => {
+        document.body.removeChild(popup);
+    });
 };
 
 // Benutzer authentifizieren
@@ -51,7 +79,7 @@ const authenticateUser = async (username, password) => {
         );
 
         if (!user) {
-            alert("Ungültiger Benutzername oder Passwort.");
+            showPopup("Fehler", "Ungültiger Benutzername oder Passwort.");
             return null;
         }
 
@@ -59,7 +87,7 @@ const authenticateUser = async (username, password) => {
         return user;
     } catch (error) {
         console.error("Fehler bei der Authentifizierung:", error.message);
-        alert("Fehler beim Login. Bitte versuche es erneut.");
+        showPopup("Fehler", "Fehler beim Login. Bitte versuche es erneut.");
         return null;
     }
 };
@@ -78,8 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const user = await authenticateUser(username, password);
             if (user) {
-                alert("Anmeldung erfolgreich!");
-                window.location.href = "customers.html"; // Weiterleitung zur Hauptseite
+                showPopup("Erfolg", "Anmeldung erfolgreich!");
+                setTimeout(() => {
+                    window.location.href = "customers.html"; // Weiterleitung zur Hauptseite
+                }, 2000); // Leichte Verzögerung, damit Popup sichtbar bleibt
             }
         });
     }
