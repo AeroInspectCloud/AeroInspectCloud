@@ -1,6 +1,6 @@
 const tenantId = "4a97cea8-8cc4-4d4c-8edc-3d59b870450f"; // Dein Tenant ID
 const clientId = "73aa213c-f324-456a-bb09-dc0b6e9faac0"; // Deine Client-ID
-const redirectUri = "http://localhost:3000"; // URI für Redirect nach Auth
+const redirectUri = "https://aeroinspectcloud.github.io/AeroInspectCloud/"; // URI für Redirect nach Auth
 const scope = "https://aeroinspect.sharepoint.com/.default"; // Standard-SharePoint-Scope
 
 let accessToken = "";
