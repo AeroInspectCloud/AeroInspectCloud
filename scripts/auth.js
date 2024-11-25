@@ -30,7 +30,15 @@ const extractTokenFromUrl = () => {
 
 // Funktion zum Anzeigen des Popups
 const showPopup = (title, message) => {
+    // Überprüfen, ob ein Popup bereits existiert und es entfernen
+    const existingPopup = document.getElementById("popup");
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+
+    // Popup erstellen
     const popup = document.createElement("div");
+    popup.id = "popup";
     popup.style.position = "fixed";
     popup.style.top = "50%";
     popup.style.left = "50%";
@@ -41,6 +49,7 @@ const showPopup = (title, message) => {
     popup.style.padding = "20px";
     popup.style.zIndex = "1000";
     popup.style.textAlign = "center";
+    popup.style.width = "300px";
 
     popup.innerHTML = `
         <h2>${title}</h2>
@@ -50,6 +59,7 @@ const showPopup = (title, message) => {
 
     document.body.appendChild(popup);
 
+    // Event zum Schließen des Popups
     const closeButton = document.getElementById("close-popup");
     closeButton.addEventListener("click", () => {
         document.body.removeChild(popup);
