@@ -1,5 +1,9 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWVyb2luc3BlY3QiLCJhIjoiY20zZDI5ZW1rMjV2dzJqc2U2cHZ0Y2I5ciJ9.ocXZqAz8Uyz0nkPD6ILZ5A';
 
+// SharePoint API-Details
+const siteUrl = "https://aeroinspect.sharepoint.com/sites/AeroInspect";
+const listEndpoint = `${siteUrl}/_api/web/lists(guid'ADA209A0-A9EB-4446-8371-B63FEC42FE8D')/items`;
+
 const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v11',
@@ -7,9 +11,6 @@ const map = new mapboxgl.Map({
     zoom: 5
 });
 
-// SharePoint API-Details
-const siteUrl = "https://aeroinspect.sharepoint.com/sites/AeroInspect";
-const listEndpoint = `${siteUrl}/_api/web/lists(guid'ADA209A0-A9EB-4446-8371-B63FEC42FE8D')/items`;
 
 let markers = [];
 let selectedMarkers = [];
