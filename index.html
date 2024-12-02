@@ -442,25 +442,31 @@ document.getElementById("show-route-details").addEventListener("click", () => {
     // Tabelle leeren
     tableBody.innerHTML = "";
 
-    // Tabelle mit aktuellen Routenpunkten füllen
-    selectedCustomers.forEach((customer, index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${customer.name}</td>
-            <td>${customer.coordinates.join(", ")}</td>
-            <td>
-                <input type="time" id="arrival-time-${index}" value="${customer.arrivalTime || ''}">
-            </td>
-            <td>
-                <input type="number" id="stay-duration-${index}" value="${customer.visitDuration}" min="0">
-            </td>
-            <td>
-                <button onclick="removeRoutePoint(${index})">Löschen</button>
-            </td>
-        `;
-        tableBody.appendChild(row);
-    });
+    console.log("Aktuelle Kunden in selectedCustomers:", selectedCustomers);
+
+selectedCustomers.forEach((customer, index) => {
+    console.log(`Verarbeite Kunde ${index + 1}:`, customer);
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${customer.name}</td>
+        <td>${customer.coordinates.join(", ")}</td>
+        <td>
+            <input type="time" id="arrival-time-${index}" value="${customer.arrivalTime || ''}">
+        </td>
+        <td>
+            <input type="number" id="stay-duration-${index}" value="${customer.visitDuration}" min="0">
+        </td>
+        <td>
+            <button onclick="removeRoutePoint(${index})">Löschen</button>
+        </td>
+    `;
+
+    console.log(`Erstellte Tabellenzeile für Kunde ${customer.name}:`, row);
+
+    tableBody.appendChild(row);
+});
 
     popup.style.display = "block";
 });
