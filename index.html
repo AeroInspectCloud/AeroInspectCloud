@@ -4,52 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AERO INSPECT - Routenplanung</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.min.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 font-sans">
-
-    <!-- Navigation -->
-    <nav class="bg-blue-600 text-white shadow-md">
-        <div class="container mx-auto p-4 flex justify-between items-center">
-            <h1 class="text-lg font-bold">AERO INSPECT</h1>
-            <ul class="flex space-x-4">
-                <li><a href="#" class="hover:text-gray-200">Home</a></li>
-                <li><a href="#" class="hover:text-gray-200">Routenplanung</a></li>
-                <li><a href="#" class="hover:text-gray-200">Kontakt</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Hauptinhalt -->
-    <div class="flex h-[calc(100vh-64px)]">
-        <!-- Kontroll-Panel -->
-        <div class="w-1/4 bg-white shadow-lg p-6">
-            <h3 class="text-xl font-bold text-blue-600 mb-4">Route planen</h3>
-            <button id="login-button" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
-            <button id="fetch-data-button" disabled class="w-full bg-gray-300 text-gray-600 py-2 rounded mt-4 cursor-not-allowed">Daten laden</button>
-            <button id="route-details-button" disabled class="w-full bg-gray-300 text-gray-600 py-2 rounded mt-4 cursor-not-allowed">Routendetails</button>
-        </div>
-
-        <!-- Karte -->
-        <div id="map" class="w-3/4 h-full"></div>
+<body>
+    <div class="control-panel">
+        <h3>Route planen</h3>
+        <button id="login-button">Login</button>
+        <button id="fetch-data-button" disabled>Daten laden</button>
+        <button id="route-details-button" disabled>Routendetails</button>
     </div>
+    <div id="map"></div>
 
-    <!-- Popup für Routendetails -->
-    <div id="route-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-1/3">
-            <h4 class="text-xl font-bold text-blue-600 mb-4">Routendetails</h4>
-            <div id="route-details" class="text-gray-700"></div>
-            <button onclick="closeRoutePopup()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Schließen</button>
-        </div>
+    <div class="route-popup" id="route-popup">
+        <h4>Routendetails</h4>
+        <div id="route-details"></div>
+        <button onclick="closeRoutePopup()">Schließen</button>
     </div>
-
-    <!-- JavaScript -->
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/map.js"></script>
     <script src="assets/js/routes.js"></script>
-
 </body>
 </html>
