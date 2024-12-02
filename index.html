@@ -265,7 +265,8 @@
         let startPoint = null;
 
         window.addToRoute = function (coordinates) {
-    const customer = customerData.find(c => 
+    // Kunde anhand der Koordinaten finden
+    const customer = customerData.find(c =>
         c.coordinates[0] === coordinates[0] && c.coordinates[1] === coordinates[1]
     );
 
@@ -274,13 +275,19 @@
         return;
     }
 
+    // Prüfen, ob Kunde bereits in der Route ist
     if (!selectedCustomers.includes(customer)) {
         customer.arrivalTime = customer.arrivalTime || ''; // Initialisiere arrivalTime
         customer.visitDuration = customer.visitDuration || 0; // Initialisiere visitDuration
-        selectedCustomers.push(customer);
-        selectedPoints.push(coordinates);
-        updateRouteDetails();
-        drawRoute();
+        selectedCustomers.push(customer); // Kunde zur Route hinzufügen
+        selectedPoints.push(coordinates); // Koordinaten zur Route hinzufügen
+
+        // Debugging: Aktuelle Kunden ausgeben
+        console.log("Kunde hinzugefügt:", customer);
+        console.log("Aktuelle Kunden in der Route:", selectedCustomers);
+
+        updateRouteDetails(); // Route-Details aktualisieren
+        drawRoute(); // Route neu zeichnen
     } else {
         alert("Punkt ist bereits in der Route.");
     }
