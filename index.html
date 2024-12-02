@@ -264,6 +264,29 @@
         const selectedPoints = [];
         let startPoint = null;
 
+        window.addToRoute = function (coordinates) {
+    const customer = customerData.find(c => 
+        c.coordinates[0] === coordinates[0] && c.coordinates[1] === coordinates[1]
+    );
+
+    if (!customer) {
+        alert("Kunde nicht gefunden!");
+        return;
+    }
+
+    if (!selectedCustomers.includes(customer)) {
+        customer.arrivalTime = customer.arrivalTime || ''; // Initialisiere arrivalTime
+        customer.visitDuration = customer.visitDuration || 0; // Initialisiere visitDuration
+        selectedCustomers.push(customer);
+        selectedPoints.push(coordinates);
+        updateRouteDetails();
+        drawRoute();
+    } else {
+        alert("Punkt ist bereits in der Route.");
+    }
+};
+
+
         async function loadSharePointData() {
             try {
                 const account = msalInstance.getAllAccounts()[0];
