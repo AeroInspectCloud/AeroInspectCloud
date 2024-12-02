@@ -150,6 +150,70 @@
                 alert("Fehler beim Abrufen der Daten.");
             }
         });
+        function drawRoute() {
+    if (selectedPoints.length < 2 && !startPoint) {
+        console.warn('Mindestens zwei Punkte (einschließlich Startpunkt) sind für die Routenberechnung erforderlich.');
+        return;
+    }
+
+    // Alle Punkte (einschließlich Startpunkt, falls vorhanden) sammeln
+    const allPoints = startPoint ? [startPoint, ...selectedPoints] : selectedPoints;
+
+    if (allPoints.length < 2) {
+        console.warn('Nicht genug Punkte für eine Route.');
+        return;
+    }
+
+    // Die Punkte in das Format der API umwandeln
+    const coordinates = allPoints.map(point => point.join(',')).join(';');
+
+    // URL für die Mapbox Optimized Trips API
+    const query = `https://api.mapbox.com/optimized-trips/v1/mapbox/driving/${coordinates}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+
+    // API-Aufruf
+    fetch(query)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Fehler bei der Routenberechnung: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.trips || data.trips.length === 0) {
+                console.warn('Keine Route gefunden.');
+                return;
+            }
+
+            const routeGeoJSON = {
+                type: 'Feature',
+                geometry: data.trips[0].geometry,
+            };
+
+            // Route hinzufügen oder aktualisieren
+            if (map.getSource('route')) {
+                map.getSource('route').setData(routeGeoJSON);
+            } else {
+                map.addSource('route', { type: 'geojson', data: routeGeoJSON });
+                map.addLayer({
+                    id: 'route',
+                    type: 'line',
+                    source: 'route',
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: { 'line-color': '#3b9ddd', 'line-width': 5 },
+                });
+            }
+
+            // Routeninformationen anzeigen
+            const distance = (data.trips[0].distance / 1000).toFixed(2); // Entfernung in km
+            const duration = Math.round(data.trips[0].duration / 60); // Dauer in Minuten
+            document.getElementById('route-distance').innerText = `Distanz: ${distance} km`;
+            document.getElementById('route-time').innerText = `Zeit: ${duration} Minuten`;
+        })
+        .catch(error => {
+            console.error('Fehler bei der API-Anfrage:', error);
+        });
+}
+
     </script>
 </body>
 </html>
