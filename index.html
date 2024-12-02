@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AERO INSPECT - MAP</title>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://alcdn.msauth.net/browser/2.33.0/js/msal-browser.min.js"></script>
     <style>
         body {
@@ -24,55 +27,145 @@
         .custom-marker {
             width: 20px;
             height: 20px;
-            background-color: red;
+            background-color: black;
             border-radius: 50%;
             border: 2px solid white;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
-        #controls {
-            position: fixed;
-            top: 20px;
+        .info-box {
+            position: absolute;
+            bottom: 20px;
             left: 20px;
-            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            max-width: 300px;
+            line-height: 1.6;
         }
 
-        .button {
+        .info-box h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .floating-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: black;
+            color: white;
+            border-radius: 8px;
             padding: 10px 20px;
-            margin-right: 10px;
-            background-color: #0078d7;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .floating-button:hover {
+            transform: scale(1.05);
+        }
+
+        .route-details-popup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -20%);
+            width: 400px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .route-details-popup h3 {
+            margin: 0 0 15px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .route-details-popup table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .route-details-popup th,
+        .route-details-popup td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .route-details-popup button {
+            width: 100%;
+            padding: 10px;
+            background-color: black;
             color: white;
             border: none;
             border-radius: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
             cursor: pointer;
+            transition: all 0.3s ease-in-out;
         }
 
-        .button:disabled {
-            background-color: grey;
-            cursor: not-allowed;
+        .route-details-popup button:hover {
+            background-color: white;
+            color: black;
+        }
+
+        .route-details-popup #geocoder-container {
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <button id="login-button" class="button">Login</button>
-        <button id="load-data-button" class="button" disabled>Daten abrufen</button>
-    </div>
     <div id="map"></div>
 
+    <div class="info-box">
+        <h3>Routen-Details</h3>
+        <p id="route-customers">Kunden: 0</p>
+        <p id="route-distance">Distanz: 0 km</p>
+        <p id="route-time">Zeit: 0 Minuten</p>
+    </div>
+
+    <div class="floating-button" id="show-route-button">Route anzeigen</div>
+
+    <div class="route-details-popup" id="route-popup">
+        <h3>ROUTEN-DETAILS</h3>
+        <div id="geocoder-container"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kunde</th>
+                    <th>Ort</th>
+                    <th>Aufenthalt (Minuten)</th>
+                </tr>
+            </thead>
+            <tbody id="route-table-body"></tbody>
+        </table>
+        <button id="close-popup">Schließen</button>
+    </div>
+
     <script>
-        // Mapbox Access Token
         mapboxgl.accessToken = 'pk.eyJ1IjoiYWVyb2luc3BlY3QiLCJhIjoiY20zZDI5ZW1rMjV2dzJqc2U2cHZ0Y2I5ciJ9.ocXZqAz8Uyz0nkPD6ILZ5A';
 
-        // Initialize Map
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/light-v10',
-            center: [10.0, 50.0],
-            zoom: 5
-        });
-
-        // MSAL Configuration
         const msalConfig = {
             auth: {
                 clientId: "73aa213c-f324-456a-bb09-dc0b6e9faac0",
@@ -90,32 +183,23 @@
         const siteUrl = "https://aeroinspect.sharepoint.com/sites/AeroInspect";
         const listEndpoint = `${siteUrl}/_api/web/lists(guid'ADA209A0-A9EB-4446-8371-B63FEC42FE8D')/items`;
 
-        let selectedPoints = [];
-        let startPoint = null;
-
-        // Login Event
-        document.getElementById("login-button").addEventListener("click", async () => {
-            try {
-                const account = msalInstance.getAllAccounts()[0];
-                if (!account) {
-                    await msalInstance.loginPopup(loginRequest);
-                }
-                document.getElementById("load-data-button").disabled = false;
-                alert("Login erfolgreich!");
-            } catch (error) {
-                console.error("Login-Fehler:", error);
-                alert("Login fehlgeschlagen.");
-            }
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: [10.0, 50.0],
+            zoom: 5,
         });
 
-        // Load Data Event
-        document.getElementById("load-data-button").addEventListener("click", async () => {
+        const customerData = [];
+        const selectedCustomers = [];
+        const selectedPoints = [];
+        let startPoint = null;
+
+        async function loadSharePointData() {
             try {
                 const account = msalInstance.getAllAccounts()[0];
-                const tokenResponse = await msalInstance.acquireTokenSilent({
-                    ...loginRequest,
-                    account
-                });
+                if (!account) await msalInstance.loginPopup(loginRequest);
+                const tokenResponse = await msalInstance.acquireTokenSilent({ ...loginRequest, account });
 
                 const response = await fetch(listEndpoint, {
                     headers: {
@@ -124,12 +208,10 @@
                     }
                 });
 
-                if (!response.ok) throw new Error("Fehler beim Abrufen der Daten.");
-
+                if (!response.ok) throw new Error("Fehler beim Abrufen der SharePoint-Daten.");
                 const data = await response.json();
-                const customers = data.d.results;
 
-                customers.forEach(customer => {
+                data.d.results.forEach((customer, index) => {
                     const lng = parseFloat(customer.L_x00e4_ngengrad.replace(',', '.'));
                     const lat = parseFloat(customer.Breitengrad.replace(',', '.'));
 
@@ -142,90 +224,5 @@
                     markerElement.className = 'custom-marker';
 
                     const popup = new mapboxgl.Popup().setHTML(`
-                        <strong>${customer.Kundenname}</strong>
-                        <button onclick="addToRoute([${lng}, ${lat}])">Zur Route hinzufügen</button>
-                    `);
-
-                    new mapboxgl.Marker({ element: markerElement })
-                        .setLngLat([lng, lat])
-                        .setPopup(popup)
-                        .addTo(map);
-                });
-
-                alert("Daten erfolgreich geladen!");
-            } catch (error) {
-                console.error("Fehler beim Abrufen der Daten:", error);
-                alert("Fehler beim Abrufen der Daten.");
-            }
-        });
-
-        // Add to Route Function
-        window.addToRoute = function (point) {
-            if (!selectedPoints.includes(point)) {
-                selectedPoints.push(point);
-                alert('Punkt zur Route hinzugefügt!');
-                console.log('Aktuelle Route:', selectedPoints);
-            } else {
-                alert('Punkt bereits in der Route!');
-            }
-        };
-
-        // Draw Route Function
-        function drawRoute() {
-            if (selectedPoints.length < 2 && !startPoint) {
-                console.warn('Mindestens zwei Punkte (einschließlich Startpunkt) sind für die Routenberechnung erforderlich.');
-                return;
-            }
-
-            const allPoints = startPoint ? [startPoint, ...selectedPoints] : selectedPoints;
-
-            if (allPoints.length < 2) {
-                console.warn('Nicht genug Punkte für eine Route.');
-                return;
-            }
-
-            const coordinates = allPoints.map(point => point.join(',')).join(';');
-            const query = `https://api.mapbox.com/optimized-trips/v1/mapbox/driving/${coordinates}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
-
-            fetch(query)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Fehler bei der Routenberechnung: ${response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data.trips || data.trips.length === 0) {
-                        console.warn('Keine Route gefunden.');
-                        return;
-                    }
-
-                    const routeGeoJSON = {
-                        type: 'Feature',
-                        geometry: data.trips[0].geometry,
-                    };
-
-                    if (map.getSource('route')) {
-                        map.getSource('route').setData(routeGeoJSON);
-                    } else {
-                        map.addSource('route', { type: 'geojson', data: routeGeoJSON });
-                        map.addLayer({
-                            id: 'route',
-                            type: 'line',
-                            source: 'route',
-                            layout: { 'line-join': 'round', 'line-cap': 'round' },
-                            paint: { 'line-color': '#3b9ddd', 'line-width': 5 },
-                        });
-                    }
-
-                    const distance = (data.trips[0].distance / 1000).toFixed(2);
-                    const duration = Math.round(data.trips[0].duration / 60);
-                    alert(`Route berechnet: Distanz: ${distance} km, Dauer: ${duration} Minuten`);
-                })
-                .catch(error => {
-                    console.error('Fehler bei der API-Anfrage:', error);
-                });
-        }
-    </script>
-</body>
-</html>
+                        <h3>${customer.Kundenname}</h3>
+                        <button onclick="addToRoute
