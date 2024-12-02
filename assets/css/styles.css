@@ -1,50 +1,60 @@
+/* Allgemeines Styling */
 body {
     margin: 0;
     font-family: 'Roboto', sans-serif;
     background-color: #f4f4f4;
+    color: #333333;
 }
 
+/* Mapbox-Karte */
 #map {
     position: absolute;
     top: 100px; /* Platz für das Kontroll-Panel */
     bottom: 0;
-    width: 100%;
-    z-index: 1; /* Niedriger als das Kontroll-Panel */
+    left: 0;
+    right: 0;
+    z-index: 1; /* Karte bleibt hinter den UI-Elementen */
+    background-color: #eaeaea; /* Fallback-Hintergrundfarbe */
 }
 
+/* Kontroll-Panel */
 .control-panel {
     position: absolute;
     top: 10px;
     left: 10px;
     background: white;
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    z-index: 100; /* Sicherstellen, dass es über der Karte liegt */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 100; /* Höher als die Karte */
     width: 350px;
 }
 
 .control-panel h3 {
-    margin: 0 0 10px;
+    margin: 0 0 15px;
+    font-size: 18px;
     font-weight: 700;
     color: #0078d4;
 }
 
-.control-panel input,
 .control-panel button {
-    width: calc(100% - 20px);
+    display: block;
+    width: 100%;
     margin: 10px 0;
     padding: 10px;
     font-size: 14px;
-    border: 1px solid #ddd;
+    font-weight: 500;
+    color: white;
+    background-color: #0078d4;
+    border: none;
     border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
-.control-panel button {
-    background-color: #0078d4;
-    color: white;
-    border: none;
-    cursor: pointer;
+.control-panel button:hover {
+    background-color: #005fa3;
+    transform: translateY(-2px);
 }
 
 .control-panel button:disabled {
@@ -52,6 +62,16 @@ body {
     cursor: not-allowed;
 }
 
+.control-panel input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+/* Popup für Routendetails */
 .route-popup {
     position: fixed;
     top: 50%;
@@ -59,10 +79,10 @@ body {
     transform: translate(-50%, -50%);
     background: white;
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 200; /* Über allem anderen */
     display: none;
-    z-index: 200; /* Popup sollte über allem liegen */
 }
 
 .route-popup h4 {
@@ -72,14 +92,62 @@ body {
 }
 
 .route-popup button {
+    margin-top: 15px;
     background-color: #0078d4;
     color: white;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
+    font-size: 14px;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .route-popup button:hover {
     background-color: #005fa3;
+}
+
+/* Marker-Styling */
+.custom-marker {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.custom-marker:hover {
+    transform: scale(1.2);
+}
+
+/* Tooltip-Styling für Popups */
+.mapboxgl-popup-content {
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 10px;
+    color: #333;
+}
+
+.mapboxgl-popup-content strong {
+    font-weight: 700;
+    color: #0078d4;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+    border-top-color: #0078d4;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+    .control-panel {
+        width: 90%;
+        left: 5%;
+    }
+
+    #map {
+        top: 150px; /* Mehr Platz für UI-Elemente */
+    }
 }
