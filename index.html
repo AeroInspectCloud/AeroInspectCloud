@@ -133,6 +133,52 @@
         .route-details-popup #geocoder-container {
             margin-bottom: 15px;
         }
+
+        .route-details-popup {
+    display: none;
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -20%);
+    width: 600px;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.route-details-popup table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.route-details-popup th,
+.route-details-popup td {
+    text-align: left;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.route-details-popup button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+.route-details-popup button:hover {
+    background-color: white;
+    color: black;
+}
+
     </style>
 </head>
 <body>
@@ -162,6 +208,29 @@
         </table>
         <button id="close-popup">Schließen</button>
     </div>
+
+    <!-- Button to Show Route Details -->
+<div class="floating-button" id="show-route-details">Route Details</div>
+
+<!-- Popup for Route Details -->
+<div class="route-details-popup" id="route-details-popup">
+    <h3>Route Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Kunde</th>
+                <th>Ort</th>
+                <th>Ankunftszeit</th>
+                <th>Verweildauer (Min)</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody id="route-details-body"></tbody>
+    </table>
+    <button id="close-route-details">Schließen</button>
+</div>
+
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoiYWVyb2luc3BlY3QiLCJhIjoiY20zZDI5ZW1rMjV2dzJqc2U2cHZ0Y2I5ciJ9.ocXZqAz8Uyz0nkPD6ILZ5A';
@@ -334,6 +403,70 @@
 
         // Automatisch SharePoint-Daten laden
         loadSharePointData();
+
+        // Öffnet das Route-Details-Popup und füllt die Tabelle
+document.getElementById("show-route-details").addEventListener("click", () => {
+    const popup = document.getElementById("route-details-popup");
+    const tableBody = document.getElementById("route-details-body");
+
+    // Tabelle leeren
+    tableBody.innerHTML = "";
+
+    // Tabelle mit aktuellen Routenpunkten füllen
+    selectedCustomers.forEach((customer, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${customer.name}</td>
+            <td>${customer.coordinates.join(", ")}</td>
+            <td>
+                <input type="time" id="arrival-time-${index}" value="${customer.arrivalTime || ''}">
+            </td>
+            <td>
+                <input type="number" id="stay-duration-${index}" value="${customer.visitDuration}" min="0">
+            </td>
+            <td>
+                <button onclick="removeRoutePoint(${index})">Löschen</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+
+    popup.style.display = "block";
+});
+
+// Schließt das Popup
+document.getElementById("close-route-details").addEventListener("click", () => {
+    document.getElementById("route-details-popup").style.display = "none";
+});
+
+// Entfernt einen Punkt aus der Route
+window.removeRoutePoint = function (index) {
+    selectedCustomers.splice(index, 1);
+    selectedPoints.splice(index, 1);
+
+    // Route aktualisieren
+    updateRouteDetails();
+    drawRoute();
+
+    // Tabelle neu laden
+    document.getElementById("show-route-details").click();
+};
+
+// Speichert Änderungen (optional)
+function saveRouteChanges() {
+    selectedCustomers.forEach((customer, index) => {
+        const arrivalTimeInput = document.getElementById(`arrival-time-${index}`);
+        const stayDurationInput = document.getElementById(`stay-duration-${index}`);
+        
+        if (arrivalTimeInput) customer.arrivalTime = arrivalTimeInput.value;
+        if (stayDurationInput) customer.visitDuration = parseInt(stayDurationInput.value, 10) || 0;
+    });
+
+    updateRouteDetails();
+    alert("Änderungen gespeichert!");
+}
+
     </script>
 </body>
 </html>
