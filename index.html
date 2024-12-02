@@ -225,4 +225,115 @@
 
                     const popup = new mapboxgl.Popup().setHTML(`
                         <h3>${customer.Kundenname}</h3>
-                        <button onclick="addToRoute
+                                            <button onclick="addToRoute([${lng}, ${lat}])">Zur Route hinzufügen</button>
+                    `);
+
+                    new mapboxgl.Marker({ element: markerElement })
+                        .setLngLat([lng, lat])
+                        .setPopup(popup)
+                        .addTo(map);
+
+                    customerData.push({
+                        id: index + 1,
+                        name: customer.Kundenname,
+                        coordinates: [lng, lat],
+                        visitDuration: 0,
+                    });
+                });
+
+                alert("SharePoint-Daten erfolgreich geladen!");
+            } catch (error) {
+                console.error("Fehler beim Laden der SharePoint-Daten:", error);
+                alert("Fehler beim Laden der SharePoint-Daten.");
+            }
+        }
+
+        window.addToRoute = function (coordinates) {
+            if (!selectedPoints.includes(coordinates)) {
+                selectedPoints.push(coordinates);
+                updateRouteDetails();
+                drawRoute();
+            } else {
+                alert("Punkt ist bereits in der Route.");
+            }
+        };
+
+        function updateRouteDetails() {
+            const totalVisitTime = selectedCustomers.reduce((sum, customer) => sum + customer.visitDuration, 0);
+            document.getElementById('route-customers').innerText = `Kunden: ${selectedCustomers.length}`;
+            document.getElementById('route-distance').innerText = `Distanz: ${selectedPoints.length * 5} km`;
+            document.getElementById('route-time').innerText = `Zeit: ${selectedPoints.length * 10 + totalVisitTime} Minuten`;
+        }
+
+        function drawRoute() {
+            const allPoints = startPoint ? [startPoint, ...selectedPoints] : selectedPoints;
+            if (allPoints.length < 2) return;
+
+            const coordinates = allPoints.map((point) => point.join(',')).join(';');
+            const query = `https://api.mapbox.com/optimized-trips/v1/mapbox/driving/${coordinates}?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+
+            fetch(query)
+                .then((response) => response.json())
+                .then((data) => {
+                    const routeGeoJSON = {
+                        type: 'Feature',
+                        geometry: data.trips[0].geometry,
+                    };
+
+                    if (map.getSource('route')) {
+                        map.getSource('route').setData(routeGeoJSON);
+                    } else {
+                        map.addSource('route', { type: 'geojson', data: routeGeoJSON });
+                        map.addLayer({
+                            id: 'route',
+                            type: 'line',
+                            source: 'route',
+                            layout: { 'line-join': 'round', 'line-cap': 'round' },
+                            paint: { 'line-color': 'black', 'line-width': 4 },
+                        });
+                    }
+                })
+                .catch((error) => {
+                    console.error("Fehler bei der Routenberechnung:", error);
+                });
+        }
+
+        document.getElementById('show-route-button').addEventListener('click', () => {
+            const popup = document.getElementById('route-popup');
+            const tableBody = document.getElementById('route-table-body');
+            tableBody.innerHTML = selectedCustomers
+                .map(
+                    (customer, index) => `
+                <tr>
+                    <td>${index + 1}. ${customer.name}</td>
+                    <td>${customer.coordinates.join(', ')}</td>
+                    <td>${customer.visitDuration} Minuten</td>
+                </tr>
+            `
+                )
+                .join('');
+            popup.style.display = 'block';
+        });
+
+        document.getElementById('close-popup').addEventListener('click', () => {
+            document.getElementById('route-popup').style.display = 'none';
+        });
+
+        const geocoder = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            placeholder: 'Abfahrtsstandort eingeben...',
+        });
+
+        geocoder.on('result', (e) => {
+            startPoint = e.result.geometry.coordinates;
+            drawRoute();
+        });
+
+        document.getElementById('geocoder-container').appendChild(geocoder.onAdd(map));
+
+        // Automatisch SharePoint-Daten laden
+        loadSharePointData();
+    </script>
+</body>
+</html>
