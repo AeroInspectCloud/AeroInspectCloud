@@ -3,80 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AERO INSPECT - Dashboard</title>
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="assets/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-    <!-- JavaScript Libraries -->
-    <script src="https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.min.js"></script>
+    <title>AERO INSPECT - MAP</title>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://alcdn.msauth.net/browser/2.33.0/js/msal-browser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .custom-marker {
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+
+        .button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
-
-    <!-- Navigation -->
-    <nav class="bg-gray-800 text-white shadow-md">
-        <div class="container mx-auto p-4 flex justify-between items-center">
-            <h1 class="text-lg font-bold">AERO INSPECT</h1>
-            <ul class="flex space-x-4">
-                <li><a href="#" class="hover:text-gray-300">Dashboard</a></li>
-                <li><a href="#" class="hover:text-gray-300">Einstellungen</a></li>
-                <li><a href="#" class="hover:text-gray-300">Hilfe</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Dashboard Layout -->
-    <div class="dashboard flex h-[calc(100vh-64px)]">
-        <!-- Seitenleiste -->
-        <aside class="sidebar w-64 bg-gray-700 text-white p-6 flex flex-col gap-6">
-            <h2 class="text-xl font-bold">Navigation</h2>
-            <ul>
-                <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600">Übersicht</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600">Routenplanung</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600">Datenanalyse</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600">Einstellungen</a></li>
-            </ul>
-        </aside>
-
-        <!-- Hauptbereich -->
-        <main class="main flex-grow p-6 bg-gray-50">
-            <h2 class="text-2xl font-bold mb-4">Willkommen im Dashboard</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Kartenkomponenten -->
-                <div class="card bg-white shadow rounded-lg p-4">
-                    <h3 class="text-xl font-bold mb-2">Route planen</h3>
-                    <button id="login-button" class="button bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700">Login</button>
-                    <button id="fetch-data-button" disabled class="button bg-gray-300 text-gray-500 w-full py-2 rounded mt-4 cursor-not-allowed">Daten laden</button>
-                    <button id="route-details-button" disabled class="button bg-gray-300 text-gray-500 w-full py-2 rounded mt-4 cursor-not-allowed">Routendetails</button>
-                </div>
-                <div class="card bg-white shadow rounded-lg p-4">
-                    <h3 class="text-xl font-bold mb-2">Statistiken</h3>
-                    <p>Analysiere die Daten und Trends.</p>
-                </div>
-                <div class="card bg-white shadow rounded-lg p-4">
-                    <h3 class="text-xl font-bold mb-2">Benutzerverwaltung</h3>
-                    <p>Verwalte Benutzer und Berechtigungen.</p>
-                </div>
-            </div>
-        </main>
+<body>
+    <div id="controls">
+        <button id="login-button" class="button">Login</button>
+        <button id="load-data-button" class="button" disabled>Daten abrufen</button>
     </div>
+    <div id="map"></div>
 
-    <!-- Karte -->
-    <div id="map" class="absolute inset-0 z-0"></div>
+    <script>
+        // Mapbox Access Token
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWVyb2luc3BlY3QiLCJhIjoiY20zZDI5ZW1rMjV2dzJqc2U2cHZ0Y2I5ciJ9.ocXZqAz8Uyz0nkPD6ILZ5A';
 
-    <!-- Popup für Routendetails -->
-    <div id="route-popup" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-1/3">
-            <h4 class="text-xl font-bold text-blue-600 mb-4">Routendetails</h4>
-            <div id="route-details" class="text-gray-700"></div>
-            <button onclick="closeRoutePopup()" class="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Schließen</button>
-        </div>
-    </div>
+        // Initialize Map
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: [10.0, 50.0],
+            zoom: 5
+        });
 
-    <!-- JavaScript -->
-    <script src="assets/js/auth.js"></script>
-    <script src="assets/js/map.js"></script>
-    <script src="assets/js/routes.js"></script>
+        // MSAL Configuration
+        const msalConfig = {
+            auth: {
+                clientId: "73aa213c-f324-456a-bb09-dc0b6e9faac0", // Replace with your client ID
+                authority: "https://login.microsoftonline.com/4a97cea8-8cc4-4d4c-8edc-3d59b870450f",
+                redirectUri: "https://aeroinspectcloud.github.io" // Replace with your redirect URI
+            }
+        };
+
+        const loginRequest = {
+            scopes: ["https://microsoft.sharepoint.com/Sites.Read.All"]
+        };
+
+        const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+        const siteUrl = "https://aeroinspect.sharepoint.com/sites/AeroInspect"; // Replace with your SharePoint URL
+        const listEndpoint = `${siteUrl}/_api/web/lists(guid'ADA209A0-A9EB-4446-8371-B63FEC42FE8D')/items`;
+
+        // Login Event
+        document.getElementById("login-button").addEventListener("click", async () => {
+            try {
+                const account = msalInstance.getAllAccounts()[0];
+                if (!account) {
+                    await msalInstance.loginPopup(loginRequest);
+                }
+                document.getElementById("load-data-button").disabled = false;
+                alert("Login erfolgreich!");
+            } catch (error) {
+                console.error("Login-Fehler:", error);
+                alert("Login fehlgeschlagen.");
+            }
+        });
+
+        // Load Data Event
+        document.getElementById("load-data-button").addEventListener("click", async () => {
+            try {
+                const account = msalInstance.getAllAccounts()[0];
+                const tokenResponse = await msalInstance.acquireTokenSilent({
+                    ...loginRequest,
+                    account
+                });
+
+                const response = await fetch(listEndpoint, {
+                    headers: {
+                        Authorization: `Bearer ${tokenResponse.accessToken}`,
+                        Accept: "application/json;odata=verbose"
+                    }
+                });
+
+                if (!response.ok) throw new Error("Fehler beim Abrufen der Daten.");
+
+                const data = await response.json();
+                const customers = data.d.results;
+
+                customers.forEach(customer => {
+                    const lng = parseFloat(customer.L_x00e4_ngengrad.replace(',', '.'));
+                    const lat = parseFloat(customer.Breitengrad.replace(',', '.'));
+
+                    if (isNaN(lng) || isNaN(lat)) {
+                        console.warn(`Ungültige Koordinaten: ${customer.Kundenname}`);
+                        return;
+                    }
+
+                    const markerElement = document.createElement('div');
+                    markerElement.className = 'custom-marker';
+
+                    new mapboxgl.Marker({ element: markerElement })
+                        .setLngLat([lng, lat])
+                        .setPopup(new mapboxgl.Popup().setHTML(`<strong>${customer.Kundenname}</strong>`))
+                        .addTo(map);
+                });
+
+                alert("Daten erfolgreich geladen!");
+            } catch (error) {
+                console.error("Fehler beim Abrufen der Daten:", error);
+                alert("Fehler beim Abrufen der Daten.");
+            }
+        });
+    </script>
 </body>
 </html>
